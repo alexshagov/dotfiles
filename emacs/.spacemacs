@@ -318,6 +318,7 @@ you should place your code here."
   (setq-default
    ;; Prevent insert encoding comment in ruby mode
    ruby-insert-encoding-magic-comment nil
+   js-indent-level 2
    helm-split-window-inside-p t
    )
   )
