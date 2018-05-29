@@ -328,6 +328,14 @@ you should place your code here."
  (global-set-key (kbd "C-x g") 'magit-status)
  (global-set-key (kbd "C-x M-g") 'magit-dispatch-popup)
 
+ (defun switch-to-previous-buffer ()
+   "Switch to previously open buffer.
+ Repeated invocations toggle between the two most recently open buffers."
+   (interactive)
+   (switch-to-buffer (other-buffer (current-buffer) 1)))
+ (global-set-key (kbd "C-c b") 'switch-to-previous-buffer)
+
+
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
 (custom-set-variables
