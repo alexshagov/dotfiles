@@ -51,7 +51,7 @@ This function should only modify configuration layer settings."
      multiple-cursors
      (ruby :variables
            ruby-enable-enh-ruby-mode t
-           ruby-version-manager 'rvm
+           ruby-version-manager 'nil
            ruby-test-runner 'rspec
            ruby-backend 'robe)
 
@@ -514,6 +514,9 @@ This function is called at the very end of Spacemacs startup, after layer
 configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
+  (setq-default
+   helm-ag-use-agignore "true"
+   )
   )
 
 ;; Do not write anything past this comment. This is where Emacs will
