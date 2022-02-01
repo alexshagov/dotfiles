@@ -47,7 +47,13 @@ This function should only modify configuration layer settings."
      ;; lsp
      markdown
      html
-     javascript
+     prettier
+     (javascript :variables
+                 js2-mode-show-strict-warnings nil
+                 js2-mode-show-parse-errors nil
+                 javascript-fmt-tool 'prettier
+                 js2-basic-offset 2
+                 js-indent-level 2)
      multiple-cursors
      (ruby :variables
            ruby-enable-enh-ruby-mode t
