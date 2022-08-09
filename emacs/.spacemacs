@@ -56,7 +56,6 @@ This function should only modify configuration layer settings."
                  js-indent-level 2)
      multiple-cursors
      (ruby :variables
-           ruby-enable-enh-ruby-mode t
            ruby-version-manager 'nil
            ruby-test-runner 'rspec
            ruby-backend 'robe)
@@ -69,6 +68,8 @@ This function should only modify configuration layer settings."
             shell-default-position 'bottom
             shell-default-shell 'vterm
             shell-vterm-history-file-location "~/.zsh_history")
+     (tree-sitter :variables
+                  tree-sitter-fold-enable t)
      ;; spell-checking
      ;; syntax-checking
      ;; version-control
@@ -229,7 +230,8 @@ It should only modify the values of Spacemacs settings."
    ;; List of themes, the first of the list is loaded when spacemacs starts.
    ;; Press `SPC T n' to cycle to the next theme in the list (works great
    ;; with 2 themes variants, one dark and one light)
-   dotspacemacs-themes '(spacegray
+   dotspacemacs-themes '(brin
+                         spacegray
                          spacemacs-dark
                          spacemacs-light)
 
