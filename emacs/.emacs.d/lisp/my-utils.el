@@ -3,13 +3,8 @@
 ;;;---------------------------------------------------------------------
 ;;; Go to Definition
 ;;;---------------------------------------------------------------------
-;; Load the custom definition-finding logic from the new file.
-;; Note: 'my-go-to-def.el' must be in your Emacs `load-path`.
 (require 'my-go-to-def)
-
-;; Bind the function (now defined in 'my-go-to-def.el') to M-.
 (global-set-key (kbd "M-.") 'my/rg-find-definition-at-point)
-
 
 ;;;---------------------------------------------------------------------
 ;;; Window switching
