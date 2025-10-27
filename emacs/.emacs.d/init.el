@@ -1,5 +1,7 @@
 ;;; init.el -*- lexical-binding: t; -*-
 
+(setq load-prefer-newer t)
+
 (require 'package)
 
 (setq ido-enable-flex-matching t)
@@ -40,6 +42,11 @@
 (use-package rg
   :hook (after-init . rg-enable-default-bindings))
 (use-package vterm)
+(use-package avy
+  :bind (("M-s" . avy-goto-char-timer)
+         ("M-l" . avy-goto-line)))
+(use-package expand-region
+  :bind (("M-2". er/expand-region)))
 
 ;; === custom packages ===
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
@@ -50,8 +57,9 @@
     (require 'my-utils)))
 
 ;; === remaps ===
-;; NOTE: doesn't work for some reasons
-(add-hook 'after-init-hook (lambda () (define-key global-map (kbd "C-x C-b") #'ibuffer)))
+(defalias 'list-buffers 'ibuffer)
+
+;; TODO: check with benchmark-init 
 
 ;; If you prefer use-package semantics you could replace the block above with:
 ;; (use-package my-utils :load-path "lisp") ; then add :bind/:custom etc.
