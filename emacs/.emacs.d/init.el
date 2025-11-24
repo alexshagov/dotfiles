@@ -34,6 +34,7 @@
 ;; Define package archives (GNU ELPA and MELPA)
 (setq package-archives
       '(("gnu"   . "https://elpa.gnu.org/packages/")
+	("nongnu" . "https://elpa.nongnu.org/nongnu/")
         ("melpa" . "https://melpa.org/packages/")))
 
 ;; Don't auto-enable packages before init finishes
@@ -60,11 +61,10 @@
 ;; Configure features that come with Emacs or are commonly enabled,
 ;; like Ido, Winner, and Repeat modes.
 
-;; --- Ido (Interactive Do) ---
-(require 'ido)
-(setq ido-enable-flex-matching t) ;; Enable flexible, fuzzy matching
-(setq ido-everywhere t)           ;; Use Ido for all completions
-(ido-mode t)                     ;; Enable Ido mode globally
+;; --- Modern, built-in emulation of Ido ---
+;; NOTE: using fido in minibuffers, using orderless in buffer via corfu
+(fido-mode 1)
+(fido-vertical-mode 1)
 
 ;; --- Repeat Mode ---
 (repeat-mode 1) ;; Allow repeating commands
@@ -110,7 +110,103 @@
 (use-package expand-region
   :bind (("M-2" . er/expand-region)))
 
-;; --- Major Modes ---
+(use-package treemacs
+  :ensure t
+  :defer t
+  :bind
+  (:map global-map
+        ("M-0"       . treemacs-select-window)
+        ("C-x t t"   . treemacs)
+        ("C-x t C-t" . treemacs-find-file))
+  :config
+  (treemacs-follow-mode t)
+  (treemacs-filewatch-mode t)
+  (treemacs-fringe-indicator-mode 'always)
+  (treemacs-git-mode 'deferred))
+
+;; --- COMPLETIONS config
+
+;; --- Corfu (The Interface) ---
+(use-package corfu
+  :ensure t
+  :init
+  (global-corfu-mode)
+  :custom
+  (corfu-auto t)                 ;; Enable auto completion
+  (corfu-auto-delay 0.2)         ;; Delay before showing popup
+  (corfu-auto-prefix 2)          ;; show after 2 chars (important!)
+  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
+  (corfu-preselect 'prompt)      ;; Always preselect the prompt
+  
+  ;; Quit when no match logic
+  (corfu-quit-no-match 'separator) 
+  :bind
+  (:map corfu-map
+        ("TAB" . corfu-next)
+        ([tab] . corfu-next)
+        ("S-TAB" . corfu-previous)
+        ([backtab] . corfu-previous)))
+
+;; --- Orderless (The Filtering Logic) ---
+(use-package orderless
+  :custom
+  (completion-styles '(orderless basic))
+  ;; try "flex" matching if literal matching fails
+  (orderless-matching-styles '(orderless-literal orderless-flex)))
+
+;; --- Cape (The Backends) ---
+(use-package cape
+  :ensure t
+  :init
+  ;; Add useful defaults globally
+  (add-to-list 'completion-at-point-functions #'cape-dabbrev)
+  (add-to-list 'completion-at-point-functions #'cape-file)
+  ;; (add-to-list 'completion-at-point-functions #'cape-history) ;; Optional
+  ;; (add-to-list 'completion-at-point-functions #'cape-keyword) ;; Optional
+  
+  :config
+  ;; Silence the "dabbrev" backend to prevent error messages in strict buffers
+  (setq cape-dabbrev-check-other-buffers t))
+
+;; This enables the popup in terminal Emacs (< 31)
+(use-package corfu-terminal
+  :ensure t
+  :after corfu
+  :config
+  (corfu-terminal-mode +1))
+
+;; --- END COMPLETIONS config
+
+
+;; --- Major Modes + Tree-sitter grammars setup ---
+
+;; RUBY MODE
+
+;; 1) Where to fetch grammars from
+(setq treesit-language-source-alist
+      '((ruby "https://github.com/tree-sitter/tree-sitter-ruby")))
+
+;; 2) Where Emacs will look for built grammars
+;; Emacs searches treesit-extra-load-path first, then ~/.emacs.d/tree-sitter/, then system lib dirs.
+;; Putting grammars in ~/.emacs.d/tree-sitter/ is reliable (esp. on macOS).
+(add-to-list 'treesit-extra-load-path
+             (expand-file-name "tree-sitter" user-emacs-directory)) [web:18]
+
+;; 3) Auto-install grammar(s) at startup if missing
+(when (and (fboundp 'treesit-available-p) (treesit-available-p))
+  (dolist (lang (mapcar #'car treesit-language-source-alist))
+    (unless (treesit-language-available-p lang)
+      (condition-case err
+          (progn
+            (make-directory (expand-file-name "tree-sitter" user-emacs-directory) t)
+            (treesit-install-language-grammar lang))
+        (error
+         (message "treesit install failed for %s: %s" lang err)))))) [web:4]
+
+(add-to-list 'major-mode-remap-alist '(ruby-mode . ruby-ts-mode))
+
+;; MARKDOWN MODE
+
 (use-package markdown-mode
   :ensure t
   :mode (("README\\.md\\'" . gfm-mode)
@@ -155,7 +251,9 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages nil)
+ '(package-selected-packages
+   '(benchmark-init cape corfu-terminal expand-region fzf magit
+		    markdown-mode orderless rg treemacs vterm))
  '(warning-suppress-types '((use-package))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
