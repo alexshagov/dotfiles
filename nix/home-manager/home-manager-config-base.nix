@@ -35,13 +35,22 @@
     #   echo "Hello, ${config.home.username}!"
     # '')
 
+    bash
     direnv
     ripgrep
     htop
     inetutils
+    util-linux
+    jq
+    fd
+    fzf
+    bat
+    tree
+    cmake
 
-    emacs29
-    emacsPackages.vterm
+    ((emacsPackagesFor emacs-pgtk).emacsWithPackages (epkgs: [
+      epkgs.vterm
+    ]))
 
   ];
 
