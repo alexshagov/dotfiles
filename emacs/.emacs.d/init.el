@@ -62,6 +62,7 @@
 ;; like Ido, Winner, and Repeat modes.
 
 ;; --- Modern, built-in emulation of Ido ---
+;; NOTE: using fido in minibuffers, using orderless in buffer via corfu
 (fido-mode 1)
 (fido-vertical-mode 1)
 
