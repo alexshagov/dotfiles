@@ -62,9 +62,14 @@
 ;; like Ido, Winner, and Repeat modes.
 
 ;; --- Modern, built-in emulation of Ido ---
-;; NOTE: using fido in minibuffers, using orderless in buffer via corfu
 (fido-mode 1)
 (fido-vertical-mode 1)
+
+;; ;; --- Ido (Interactive Do) ---
+;; (require 'ido)
+;; (setq ido-enable-flex-matching t) ;; Enable flexible, fuzzy matching
+;; (setq ido-everywhere t)           ;; Use Ido for all completions
+;; (ido-mode t)                     ;; Enable Ido mode globally
 
 ;; --- Repeat Mode ---
 (repeat-mode 1) ;; Allow repeating commands
@@ -85,18 +90,25 @@
   :bind ("C-x g" . magit-status))
 
 (use-package fzf
-  :bind (("C-c f" . fzf-git-files))
+  :bind (("C-c f" . my-fzf-git-files))
   :config
-  (setq fzf/args "-x --color bw --print-query --margin=1,0 --no-hscroll"
-        fzf/executable "fzf"
-        fzf/git-grep-args "-i --line-number %s"
-        ;; command used for `fzf-grep-*` functions
-        ;; example usage for ripgrep:
-        ;; fzf/grep-command "rg --no-heading -nH"
-        fzf/grep-command "grep -nrH"
-        ;; If nil, the fzf buffer will appear at the top of the window
-        fzf/position-bottom t
-        fzf/window-height 15))
+  (setq fzf/position-bottom t
+        fzf/window-height 13)
+  ;; Wrapper to fix Side Window error (Treemacs conflict)
+  (defun my-fzf-git-files ()
+    "Switch to a valid window before running fzf-git-files."
+    (interactive)
+    ;; If the current window is a side window (like Treemacs), pick a better one
+    (if (window-parameter (selected-window) 'window-side)
+        (select-window (get-window-with-predicate
+                        (lambda (w) (not (window-parameter w 'window-side))))))
+    (fzf-git-files))
+
+  (add-to-list 'display-buffer-alist
+               '("\\*fzf\\*"
+                 (display-buffer-reuse-window
+                  display-buffer-at-bottom)
+                 (window-height . 0.3))))
 
 (use-package rg
   :hook (after-init . rg-enable-default-bindings))
