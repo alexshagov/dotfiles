@@ -87,6 +87,9 @@
 ;;----------------------------------------------------------------------------
 ;; This is the main section for adding and configuring third-party packages.
 
+(use-package ghostel
+  :ensure t)
+
 (use-package magit
   :bind ("C-x g" . magit-status))
 
@@ -113,8 +116,6 @@
 
 (use-package rg
   :hook (after-init . rg-enable-default-bindings))
-
-(use-package vterm)
 
 (use-package avy
   :bind (("M-s" . avy-goto-char-timer)
@@ -264,9 +265,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   '(benchmark-init cape corfu-terminal expand-region fzf magit
-		    markdown-mode orderless rg treemacs vterm))
+ '(package-selected-packages nil)
  '(warning-suppress-types '((use-package))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
