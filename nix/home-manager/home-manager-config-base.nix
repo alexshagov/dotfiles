@@ -47,10 +47,9 @@
     bat
     tree
     cmake
+    emacs
+    tmux
 
-    ((emacsPackagesFor emacs-pgtk).emacsWithPackages (epkgs: [
-      epkgs.vterm
-    ]))
 
   ];
 
@@ -128,6 +127,43 @@
     enable = true;
     # enableBashIntegration = true; # see note on other shells below
     nix-direnv.enable = true;
+  };
+
+  programs.tmux = {
+    enable = true;
+    terminal = "tmux-256color";
+    historyLimit = 100000;
+    mouse = true;
+    keyMode = "emacs";
+    prefix = "C-z";
+    baseIndex = 1;
+    escapeTime = 0;
+    shell = "${pkgs.zsh}/bin/zsh";
+
+    extraConfig = ''
+      set -g default-shell "${pkgs.zsh}/bin/zsh"
+      set -g default-command "exec ${pkgs.zsh}/bin/zsh"
+
+      set -g set-clipboard on
+      set -g focus-events on
+
+      bind c new-window
+      bind n next-window
+      bind p previous-window
+
+      bind s choose-tree -Zw
+      bind-key -T choose-tree d kill-window
+
+      bind | split-window -h
+      bind - split-window -v
+
+      set -g default-terminal "tmux-256color"
+      set-option -sa terminal-features ",tmux-256color:RGB"
+      set-option -sa terminal-overrides ",xterm-256color:Tc"
+
+      set -g display-panes-time 1000
+      set -g buffer-limit 20
+    '';
   };
 
 
