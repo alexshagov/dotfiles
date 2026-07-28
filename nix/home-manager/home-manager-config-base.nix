@@ -50,7 +50,10 @@
     emacs
     tmux
 
-
+    # AI coding agents (provided by the llm-agents overlay in flake.nix).
+    # binaries installed: claude, opencode
+    llm-agents.claude-code
+    llm-agents.opencode
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
