@@ -1,23 +1,24 @@
 ## Installing nix on MacOS
 
-guide: https://nixos.org/download/#nix-install-macos
+Determinate Nix (https://determinate.systems/install) enables flakes by default,
+so no nix.conf editing is needed after install.
+
+Recommended (macOS) — graphical installer:
+https://install.determinate.systems/determinate-pkg/stable/Universal
+
+Alternative — terminal:
 ```
-$ sh <(curl -L https://nixos.org/nix/install)
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
 ```
 
-#### Installing flakes
-
-Add the following to the ~/.config/nix/nix.conf or /etc/nix/nix.conf files:
-```
-experimental-features = nix-command flakes
-```
+Custom config: /etc/nix/nix.custom.conf (do not edit the generated /etc/nix/nix.conf).
 
 ## Installing home-manager
 
 guide: https://nix-community.github.io/home-manager/index.xhtml#sec-flakes-standalone
 
 ```
-nix run home-manager/release-24.05 -- init --switch
+nix run home-manager/release-26.05 -- init --switch
 ```
 
 How to apply changes:
