@@ -1,91 +1,66 @@
 ;;; init.el -*- lexical-binding: t; -*-
 
-;; TODO: check with benchmark-init
-;; (use-package benchmark-init
-;;   :ensure t ; Ensures benchmark-init is installed if not already present
-;;   :init
-;;   ;; Activate benchmark-init early in the startup process
-;;   (benchmark-init/activate)
-;;   :hook
-;;   ;; Deactivate benchmark-init after Emacs has finished initializing
-;;   (after-init . benchmark-init/deactivate)
-;;   :config
-;;   )
-
 ;;----------------------------------------------------------------------------
 ;; 1. Core Emacs Behavior & UI Tweaks
 ;;----------------------------------------------------------------------------
-;; Set basic Emacs behaviors that don't require external packages.
-
-(setq load-prefer-newer t)  ;; Prefer newer compiled files
-(menu-bar-mode -1)         ;; Disable the graphical menu bar
-(column-number-mode 1)     ;; Show column numbers in the mode line
-(setq column-number-indicator-zero-based nil) ;; Start column count from 1
-(global-auto-revert-mode t) ;; Automatically reload files changed on disk
+(setq load-prefer-newer t)
+(menu-bar-mode -1)
+(column-number-mode 1)
+(setq column-number-indicator-zero-based nil)
+(global-auto-revert-mode t)
 
 ;;----------------------------------------------------------------------------
 ;; 2. Package Management Bootstrap (package.el + use-package)
 ;;----------------------------------------------------------------------------
-;; This section sets up the package system, defines archives (MELPA),
-;; and ensures that the 'use-package' macro is available.
-
 (require 'package)
 
-;; Define package archives (GNU ELPA and MELPA)
 (setq package-archives
       '(("gnu"   . "https://elpa.gnu.org/packages/")
 	("nongnu" . "https://elpa.nongnu.org/nongnu/")
         ("melpa" . "https://melpa.org/packages/")))
 
-;; Don't auto-enable packages before init finishes
 (setq package-enable-at-startup nil)
 (package-initialize)
 
-;; Fetch archive metadata on first run
 (unless package-archive-contents
   (package-refresh-contents))
 
-;; Install use-package (our config manager) if it's not already installed
 (unless (package-installed-p 'use-package)
   (package-install 'use-package))
 
-;; Load use-package
 (require 'use-package)
 
-;; Configure use-package to auto-install missing packages
+;; Auto-install packages declared with use-package
 (setq use-package-always-ensure t)
 
 ;;----------------------------------------------------------------------------
 ;; 3. Built-in Feature Configuration
 ;;----------------------------------------------------------------------------
-;; Configure features that come with Emacs or are commonly enabled,
-;; like Ido, Winner, and Repeat modes.
-
-;; --- Modern, built-in emulation of Ido ---
-;; NOTE: using fido in minibuffers, using orderless in buffer via corfu
+;; Fido in the minibuffer; corfu + orderless handle in-buffer completion.
 (fido-mode 1)
 (fido-vertical-mode 1)
 
-;; ;; --- Ido (Interactive Do) ---
-;; (require 'ido)
-;; (setq ido-enable-flex-matching t) ;; Enable flexible, fuzzy matching
-;; (setq ido-everywhere t)           ;; Use Ido for all completions
-;; (ido-mode t)                     ;; Enable Ido mode globally
-
-;; --- Repeat Mode ---
-(repeat-mode 1) ;; Allow repeating commands
-;; Optional: Set timeout (in seconds) before repeat mode auto-exits
+;; Repeat Mode: repeat commands via a transient keymap
+(repeat-mode 1)
 (setq repeat-exit-timeout 3)
-;; Optional: Disable repeat-mode for specific commands if they cause issues
-;; (put 'other-window 'repeat-map nil)
 
-;; --- Winner Mode ---
-(winner-mode 1) ;; Enable undo/redo for window configurations
+;; Terminal Emacs clipboard support via Ghostty's OSC 52
+(setq xterm-extra-capabilities
+      '(getSelection setSelection))
+
+;; Winner Mode: undo/redo for window configurations
+(winner-mode 1)
 
 ;;----------------------------------------------------------------------------
 ;; 4. External Package Configuration (via use-package)
 ;;----------------------------------------------------------------------------
-;; This is the main section for adding and configuring third-party packages.
+
+;; KKP lets terminal Emacs disambiguate modified keys (e.g. C-i vs TAB)
+;; in KKP-capable terminals like Ghostty.
+(use-package kkp
+  :ensure t
+  :config
+  (global-kkp-mode +1))
 
 (use-package ghostel
   :ensure t)
@@ -98,11 +73,9 @@
   :config
   (setq fzf/position-bottom t
         fzf/window-height 13)
-  ;; Wrapper to fix Side Window error (Treemacs conflict)
   (defun my-fzf-git-files ()
-    "Switch to a valid window before running fzf-git-files."
+    "Run fzf-git-files from a non-side window (Treemacs workaround)."
     (interactive)
-    ;; If the current window is a side window (like Treemacs), pick a better one
     (if (window-parameter (selected-window) 'window-side)
         (select-window (get-window-with-predicate
                         (lambda (w) (not (window-parameter w 'window-side))))))
@@ -138,22 +111,20 @@
   (treemacs-fringe-indicator-mode 'always)
   (treemacs-git-mode 'deferred))
 
-;; --- COMPLETIONS config
+;; --- COMPLETIONS ---
 
-;; --- Corfu (The Interface) ---
+;; Corfu (UI)
 (use-package corfu
   :ensure t
   :init
   (global-corfu-mode)
   :custom
-  (corfu-auto t)                 ;; Enable auto completion
-  (corfu-auto-delay 0.2)         ;; Delay before showing popup
-  (corfu-auto-prefix 2)          ;; show after 2 chars (important!)
-  (corfu-cycle t)                ;; Enable cycling for `corfu-next/previous'
-  (corfu-preselect 'prompt)      ;; Always preselect the prompt
-  
-  ;; Quit when no match logic
-  (corfu-quit-no-match 'separator) 
+  (corfu-auto t)
+  (corfu-auto-delay 0.2)
+  (corfu-auto-prefix 2)
+  (corfu-cycle t)
+  (corfu-preselect 'prompt)
+  (corfu-quit-no-match 'separator)
   :bind
   (:map corfu-map
         ("TAB" . corfu-next)
@@ -161,52 +132,40 @@
         ("S-TAB" . corfu-previous)
         ([backtab] . corfu-previous)))
 
-;; --- Orderless (The Filtering Logic) ---
+;; Orderless (filtering)
 (use-package orderless
   :custom
   (completion-styles '(orderless basic))
-  ;; try "flex" matching if literal matching fails
   (orderless-matching-styles '(orderless-literal orderless-flex)))
 
-;; --- Cape (The Backends) ---
+;; Cape (backends)
 (use-package cape
   :ensure t
   :init
-  ;; Add useful defaults globally
   (add-to-list 'completion-at-point-functions #'cape-dabbrev)
   (add-to-list 'completion-at-point-functions #'cape-file)
-  ;; (add-to-list 'completion-at-point-functions #'cape-history) ;; Optional
-  ;; (add-to-list 'completion-at-point-functions #'cape-keyword) ;; Optional
-  
   :config
-  ;; Silence the "dabbrev" backend to prevent error messages in strict buffers
   (setq cape-dabbrev-check-other-buffers t))
 
-;; This enables the popup in terminal Emacs (< 31)
+;; Popup in terminal Emacs (< 31)
 (use-package corfu-terminal
   :ensure t
   :after corfu
   :config
   (corfu-terminal-mode +1))
 
-;; --- END COMPLETIONS config
+;; --- END COMPLETIONS ---
 
+;; --- Major Modes + Tree-sitter grammars ---
 
-;; --- Major Modes + Tree-sitter grammars setup ---
-
-;; RUBY MODE
-
-;; 1) Where to fetch grammars from
+;; Ruby: grammar source and install location
 (setq treesit-language-source-alist
       '((ruby "https://github.com/tree-sitter/tree-sitter-ruby")))
 
-;; 2) Where Emacs will look for built grammars
-;; Emacs searches treesit-extra-load-path first, then ~/.emacs.d/tree-sitter/, then system lib dirs.
-;; Putting grammars in ~/.emacs.d/tree-sitter/ is reliable (esp. on macOS).
 (add-to-list 'treesit-extra-load-path
-             (expand-file-name "tree-sitter" user-emacs-directory)) [web:18]
+             (expand-file-name "tree-sitter" user-emacs-directory))
 
-;; 3) Auto-install grammar(s) at startup if missing
+;; Install missing grammars at startup
 (when (and (fboundp 'treesit-available-p) (treesit-available-p))
   (dolist (lang (mapcar #'car treesit-language-source-alist))
     (unless (treesit-language-available-p lang)
@@ -215,12 +174,11 @@
             (make-directory (expand-file-name "tree-sitter" user-emacs-directory) t)
             (treesit-install-language-grammar lang))
         (error
-         (message "treesit install failed for %s: %s" lang err)))))) [web:4]
+         (message "treesit install failed for %s: %s" lang err))))))
 
 (add-to-list 'major-mode-remap-alist '(ruby-mode . ruby-ts-mode))
 
-;; MARKDOWN MODE
-
+;; Markdown
 (use-package markdown-mode
   :ensure t
   :mode (("README\\.md\\'" . gfm-mode)
@@ -231,23 +189,16 @@
 ;;----------------------------------------------------------------------------
 ;; 5. Custom Lisp Code
 ;;----------------------------------------------------------------------------
-;; Load personal Emacs Lisp files from a local directory.
-
 (add-to-list 'load-path (expand-file-name "lisp" user-emacs-directory))
 
-;; Load `my-utils`. Guard with file existence to avoid errors
-;; on fresh clones where the file may not yet exist.
+;; my-utils may not exist on a fresh clone, so guard the require.
 (let ((my-utils-file (expand-file-name "lisp/my-utils.el" user-emacs-directory)))
   (when (file-exists-p my-utils-file)
     (require 'my-utils)))
-;; NOTE: to use `use-package` semantics, might be possible to  replace the block above with:
-;; (use-package my-utils :load-path "lisp") ; then add :bind/:custom etc.
 
 ;;----------------------------------------------------------------------------
 ;; 6. Global Key Remaps & Aliases
 ;;----------------------------------------------------------------------------
-;; Redefine built-in functions and remap keys.
-
 ;; Use ibuffer (a better buffer list) instead of the default
 (defalias 'list-buffers 'ibuffer)
 
@@ -265,6 +216,7 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(custom-enabled-themes '(leuven-dark))
  '(package-selected-packages nil)
  '(warning-suppress-types '((use-package))))
 (custom-set-faces
