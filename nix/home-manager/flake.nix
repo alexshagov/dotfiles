@@ -9,9 +9,11 @@
     };
     # AI coding agents (formerly numtide/nix-ai-tools).
     llm-agents.url = "github:numtide/llm-agents.nix";
+    # Devin CLI (reads upstream CDN manifest, nightly rebuild).
+    nix-devin-cli.url = "github:broady/nix-devin-cli";
   };
 
-  outputs = { nixpkgs, home-manager, llm-agents, ... }:
+  outputs = { nixpkgs, home-manager, llm-agents, nix-devin-cli, ... }:
     let
       inherit (nixpkgs) lib;
       system = "aarch64-darwin";
@@ -19,6 +21,7 @@
     in {
       homeConfigurations."${username}" = home-manager.lib.homeManagerConfiguration {
         pkgs = nixpkgs.legacyPackages.${system};
+        extraSpecialArgs = { inherit nix-devin-cli; };
 
         modules = [
           {

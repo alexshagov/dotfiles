@@ -1,4 +1,4 @@
-{ config, pkgs, ... }:
+{ config, pkgs, nix-devin-cli, ... }:
 
 {
   # Home Manager needs a bit of information about you and the paths it should
@@ -13,28 +13,11 @@
   # You should not change this value, even if you update Home Manager. If you do
   # want to update the value, then make sure to first check the Home Manager
   # release notes.
-  home.stateVersion = "24.05"; # Please read the comment before changing.
+  home.stateVersion = "26.05"; # Please read the comment before changing.
 
-  # The home.packages option allows you to install Nix packages into your
-  # environment.
   home.packages = with pkgs; [
-    # # Adds the 'hello' command to your environment. It prints a friendly
-    # # "Hello, world!" when run.
-    # pkgs.hello
-
-    # # It is sometimes useful to fine-tune packages, for example, by applying
-    # # overrides. You can do that directly here, just don't forget the
-    # # parentheses. Maybe you want to install Nerd Fonts with a limited number of
-    # # fonts?
-    # (pkgs.nerdfonts.override { fonts = [ "FantasqueSansMono" ]; })
-
-    # # You can also create simple shell scripts directly inside your
-    # # configuration. For example, this adds a command 'my-hello' to your
-    # # environment:
-    # (pkgs.writeShellScriptBin "my-hello" ''
-    #   echo "Hello, ${config.home.username}!"
-    # '')
-
+    git
+    emacs
     bash
     direnv
     ripgrep
@@ -46,14 +29,17 @@
     fzf
     bat
     tree
-    cmake
-    emacs
+    ffmpeg
+
     tmux
 
     # AI coding agents (provided by the llm-agents overlay in flake.nix).
     # binaries installed: claude, opencode
     llm-agents.claude-code
     llm-agents.opencode
+
+    # Devin CLI (provided by the nix-devin-cli flake in flake.nix).
+    nix-devin-cli.packages.${pkgs.system}.default
   ];
 
   # Home Manager is pretty good at managing dotfiles. The primary way to manage
@@ -69,17 +55,6 @@
     #   org.gradle.console=verbose
     #   org.gradle.daemon.idletimeout=3600000
     # '';
-  };
-
-  home.shellAliases = {
-    # git =====================
-    gs = "git status";
-    gcm = "git checkout main && git pull";
-    gc = "git checkout";
-
-    # rails =====================
-    be = "bundle exec";
-    bi = "bundle install";
   };
 
   # Home Manager can also manage your environment variables through
@@ -99,16 +74,37 @@
   #  /etc/profiles/per-user/<USERNAME>/etc/profile.d/hm-session-vars.sh
   #
   home.sessionVariables = {
-    # EDITOR = "emacs";
+    EDITOR = "emacs";
   };
 
-  # === Zsh configuration ===
+  programs.ghostty = {
+    enable = true;
+    package = pkgs.ghostty-bin;
+
+    settings = {
+      macos-option-as-alt = true;
+      theme = "Arthur";
+      font-size = 14;
+      font-thicken = true;
+
+      keybind = [
+	"shift+enter=text:\\x1b\\r"
+      ];
+    };
+  };
 
   programs.zsh = {
-    enable = true; # Enable managing the Zsh configuration
+    enable = true;
+    enableCompletion = true;
+    
+    shellAliases = {
+      gs = "git status";
+      gc = "git checkout";
+      be = "bundle exec";
+    };
 
     # Additional Zsh configuration
-    initExtra = ''
+    initContent = ''
 
       # Private ENV vars configuration
       if [ -f ~/.bashrc_private ]; then
@@ -122,14 +118,18 @@
       autoload -Uz colors && colors
       setopt prompt_subst
       prompt='%F{yellow}%~/%f [%F{green}$(git_branch_name)%f] > '
-
     '';
+  };
+
+  programs.fzf = {
+    enable = true;
+    enableZshIntegration = true;
   };
 
   programs.direnv = {
     enable = true;
-    # enableBashIntegration = true; # see note on other shells below
     nix-direnv.enable = true;
+    enableZshIntegration = true;
   };
 
   programs.tmux = {
@@ -164,13 +164,14 @@
       set-option -sa terminal-features ",tmux-256color:RGB"
       set-option -sa terminal-overrides ",xterm-256color:Tc"
 
+      set -s extended-keys on
+      set -s extended-keys-format csi-u
+      set -as terminal-features ",xterm-ghostty:extkeys"
+
       set -g display-panes-time 1000
       set -g buffer-limit 20
     '';
   };
-
-
-
 
   # Let Home Manager install and manage itself.
   programs.home-manager.enable = true;
